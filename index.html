@@ -1,15 +1,369 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Malla Interactiva 🌸</title>
-  <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Malla Interactiva - Administración Pública</title>
+<style>
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #fff8fb;
+    color: #333;
+    padding: 20px;
+    max-width: 900px;
+    margin: auto;
+  }
+  h1 {
+    text-align: center;
+    color: #c75ca0;
+    margin-bottom: 1rem;
+  }
+  .year-label {
+    text-align: center;
+    font-weight: 700;
+    font-size: 1.3rem;
+    margin: 2rem 0 1rem;
+    color: #a33c82;
+  }
+  .semesters-container {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .semester {
+    background: #ffd9e8;
+    border-radius: 12px;
+    padding: 15px;
+    width: 280px;
+    box-shadow: 2px 3px 8px rgba(195, 92, 160, 0.3);
+    display: flex;
+    flex-direction: column;
+  }
+  .semester-header {
+    font-weight: 700;
+    font-size: 1.2rem;
+    border-bottom: 2px solid #c75ca0;
+    padding-bottom: 6px;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .courses {
+    flex-grow: 1;
+    overflow-y: auto;
+    max-height: 400px;
+  }
+  .course {
+    background: #fce7f0;
+    border-radius: 8px;
+    padding: 8px 10px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+  }
+  .course.locked {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+  .course.unlocked:hover {
+    background: #f7d1e3;
+    border-color: #c75ca0;
+  }
+  .course.completed {
+    background: #c8f0d6;
+    border-color: #2c9b54;
+    text-decoration: line-through;
+    cursor: pointer;
+  }
+  .course .title {
+    font-weight: 600;
+    font-size: 0.95rem;
+  }
+  .course .credits {
+    font-size: 0.85rem;
+    color: #666;
+  }
+  #creditsCounter {
+    font-weight: 700;
+    font-size: 1.2rem;
+    margin: 1.5rem auto;
+    text-align: center;
+    color: #9b3d7e;
+  }
+  footer {
+    text-align: center;
+    margin-top: 2rem;
+    color: #a47b9d;
+    font-size: 0.9rem;
+  }
+</style>
 </head>
 <body>
-  <h1>📘 Malla Interactiva - Gestión Pública</h1>
-  <div id="app"></div>
-  <script src="script.js"></script>
+<h1>💼 Malla Interactiva - Administración Pública 💼</h1>
+<div id="creditsCounter">Créditos completados: 0</div>
+
+<div id="mallaContainer"></div>
+
+<footer>✨ Creado con cariño para Laura Correa - 2025 ✨</footer>
+
+<script>
+  // Datos completos de la malla con prerrequisitos y créditos
+  const malla = [
+    {
+      year: "Primer Año",
+      semesters: [
+        {
+          emoji: "✍️",
+          name: "Semestre I",
+          courses: [
+            { id: "mat_gest_i", name: "Matemática para la Gestión I", credits: 5, prereqs: [] },
+            { id: "intro_gest_pub", name: "Introducción a la Gestión Pública", credits: 8, prereqs: [] },
+            { id: "hist_inst", name: "Historia de las Instituciones Políticas y Administrativas de Chile", credits: 5, prereqs: [] },
+            { id: "tec_sis_info", name: "Tecnologías y Sistemas de Información", credits: 3, prereqs: [] },
+            { id: "bases_jur", name: "Bases Jurídicas para la Administración del Estado", credits: 5, prereqs: [] },
+            { id: "ingles_i", name: "Inglés I", credits: 3, prereqs: [] },
+            { id: "curso_libre_1", name: "Curso Libre", credits: 2, prereqs: [] }
+          ]
+        },
+        {
+          emoji: "🧠",
+          name: "Semestre II",
+          courses: [
+            { id: "mat_gest_ii", name: "Matemática para la Gestión II", credits: 5, prereqs: ["mat_gest_i"] },
+            { id: "evolucion_admin", name: "Evolución y Complejidad de la Administración Pública", credits: 6, prereqs: ["intro_gest_pub"] },
+            { id: "ideas_debates", name: "Ideas y Debates Políticos Contemporáneos", credits: 5, prereqs: [] },
+            { id: "epistemologia", name: "Epistemología de las Ciencias Sociales", credits: 5, prereqs: [] },
+            { id: "marco_normativo_i", name: "Marco Normativo para la Acción Administrativa I", credits: 5, prereqs: ["bases_jur"] },
+            { id: "ingles_ii", name: "Inglés II", credits: 3, prereqs: ["ingles_i"] }
+          ]
+        }
+      ]
+    },
+    {
+      year: "Segundo Año",
+      semesters: [
+        {
+          emoji: "📚",
+          name: "Semestre III",
+          courses: [
+            { id: "estadistica_i", name: "Estadística para la Gestión I", credits: 5, prereqs: ["mat_gest_i"] },
+            { id: "dinamicas_admin", name: "Dinámicas de la Administración Pública Chilena", credits: 5, prereqs: ["evolucion_admin"] },
+            { id: "fenomenos_politicos", name: "Estudio de los Fenómenos Políticos", credits: 5, prereqs: ["ideas_debates"] },
+            { id: "metodologia_invest", name: "Metodología de la Investigación en Administración Pública", credits: 5, prereqs: ["epistemologia"] },
+            { id: "marco_normativo_ii", name: "Marco Normativo para la Acción Administrativa II", credits: 5, prereqs: ["marco_normativo_i"] },
+            { id: "ingles_iii", name: "Inglés III", credits: 3, prereqs: ["ingles_ii"] }
+          ]
+        },
+        {
+          emoji: "🌷",
+          name: "Semestre IV",
+          courses: [
+            { id: "estadistica_ii", name: "Estadística para la Gestión II", credits: 5, prereqs: ["estadistica_i"] },
+            { id: "diseno_organizacional", name: "Diseño Organizacional", credits: 8, prereqs: ["dinamicas_admin"] },
+            { id: "admin_fenomenos", name: "La Administración Pública y los Fenómenos Políticos", credits: 5, prereqs: ["fenomenos_politicos"] },
+            { id: "metodos_cualitativos", name: "Métodos Cualitativos para la Administración Pública", credits: 5, prereqs: ["metodologia_invest"] },
+            { id: "bases_contables", name: "Bases Contables para la Gestión Pública", credits: 5, prereqs: [] },
+            { id: "ingles_iv", name: "Inglés IV", credits: 3, prereqs: ["ingles_iii"] },
+            { id: "cfg", name: "CFG", credits: 2, prereqs: [] },
+            { id: "comportamiento_humano", name: "Comportamiento Humano en la Organización", credits: 0, prereqs: [] }
+          ]
+        }
+      ]
+    },
+    {
+      year: "Tercer Año",
+      semesters: [
+        {
+          emoji: "✨",
+          name: "Semestre V",
+          courses: [
+            { id: "fenomenos_micro", name: "Fenómenos Microeconómicos", credits: 5, prereqs: ["estadistica_ii"] },
+            { id: "gestion_procesos", name: "Gestión de Procesos en Organizaciones Públicas", credits: 6, prereqs: ["diseno_organizacional"] },
+            { id: "analisis_politico_int", name: "Análisis Político Internacional", credits: 4, prereqs: ["fenomenos_politicos"] },
+            { id: "bases_contables", name: "Bases Contables para la Gestión Pública", credits: 5, prereqs: [] },
+            { id: "metodos_cuantitativos", name: "Métodos Cuantitativos para la Administración Pública", credits: 5, prereqs: ["metodos_cualitativos"] },
+            { id: "marco_analitico_politicas", name: "Marco Analítico de las Políticas Públicas", credits: 4, prereqs: [] }
+          ]
+        },
+        {
+          emoji: "🌈",
+          name: "Semestre VI",
+          courses: [
+            { id: "fenomenos_macro", name: "Fenómenos Macroeconómicos", credits: 4, prereqs: ["fenomenos_micro"] },
+            { id: "planificacion_estrategica", name: "Planificación Estratégica de Organizaciones Públicas", credits: 6, prereqs: [] },
+            { id: "gestion_financiera", name: "Gestión Financiera y Presupuestaria del Estado", credits: 5, prereqs: ["bases_contables"] },
+            { id: "negociacion_toma_decisiones", name: "Negociación y Toma de Decisiones", credits: 4, prereqs: [] },
+            { id: "gestion_territorial", name: "Gestión Territorial y Descentralización", credits: 4, prereqs: [] },
+            { id: "formulacion_politicas", name: "Formulación e Implementación de Políticas Públicas", credits: 4, prereqs: ["marco_analitico_politicas"] },
+            { id: "gestion_personas", name: "Gestión de Personas en Organizaciones Públicas", credits: 4, prereqs: [] }
+          ]
+        }
+      ]
+    },
+    {
+      year: "Cuarto Año",
+      semesters: [
+        {
+          emoji: "🌟",
+          name: "Semestre VII",
+          courses: [
+            { id: "contabilidad_gub", name: "Contabilidad Gubernamental", credits: 5, prereqs: ["gestion_financiera"] },
+            { id: "economia_sector_pub", name: "Economía del Sector Público", credits: 4, prereqs: ["fenomenos_macro"] },
+            { id: "control_eval_org", name: "Control y Evaluación en Organizaciones Públicas", credits: 6, prereqs: [] },
+            { id: "analisis_integrado", name: "Análisis Integrado de los Problemas Públicos", credits: 8, prereqs: [] },
+            { id: "evaluacion_politicas", name: "Evaluación de Políticas Públicas", credits: 4, prereqs: ["formulacion_politicas"] },
+            { id: "curso_libre_2", name: "Curso Libre", credits: 2, prereqs: [] }
+          ]
+        },
+        {
+          emoji: "🎉",
+          name: "Semestre VIII",
+          courses: [
+            { id: "gestion_proy_sociales", name: "Gestión de Proyectos Sociales", credits: 4, prereqs: [] },
+            { id: "simulacion_asesoria", name: "Simulación de Asesoría", credits: 7, prereqs: [] },
+            { id: "comunicacion_estrat", name: "Comunicación Estratégica y Marketing Político", credits: 4, prereqs: [] },
+            { id: "seminario_inv_aplicada", name: "Seminario de Investigación Aplicada", credits: 7, prereqs: [] },
+            { id: "auditoria_gub", name: "Auditoría Gubernamental", credits: 5, prereqs: ["contabilidad_gub"] },
+            { id: "analisis_empirico", name: "Análisis Empírico de Política Pública", credits: 4, prereqs: ["evaluacion_politicas"] }
+          ]
+        }
+      ]
+    },
+    {
+      year: "Quinto Año",
+      semesters: [
+        {
+          emoji: "💥",
+          name: "Semestre IX",
+          courses: [
+            { id: "evaluacion_proy_sociales", name: "Evaluación de Proyectos Sociales", credits: 4, prereqs: ["gestion_proy_sociales"] },
+            { id: "electivo_i", name: "Electivo I", credits: 5, prereqs: [] },
+            { id: "electivo_ii", name: "Electivo II", credits: 5, prereqs: [] },
+            { id: "electivo_iii", name: "Electivo III", credits: 5, prereqs: [] },
+            { id: "cfg_2", name: "CFG", credits: 2, prereqs: [] },
+            { id: "electivo_iv", name: "Electivo IV", credits: 5, prereqs: [] },
+            { id: "direccion_etica", name: "Dirección y Ética Pública", credits: 4, prereqs: [] }
+          ]
+        },
+        {
+          emoji: "🎓",
+          name: "Semestre X",
+          courses: [
+            { id: "practica_profesional", name: "Práctica Profesional", credits: 30, prereqs: ["electivo_i","electivo_ii","electivo_iii","electivo_iv","direccion_etica","evaluacion_proy_sociales","simulacion_asesoria","auditoria_gub"] },
+            { id: "examen_titulo", name: "Examen de Título", credits: 0, prereqs: ["practica_profesional"] }
+          ]
+        }
+      ]
+    }
+  ];
+
+  // Variables para guardar estado y contador
+  let completedCourses = JSON.parse(localStorage.getItem("completedCourses")) || [];
+  const creditsCounter = document.getElementById("creditsCounter");
+  const mallaContainer = document.getElementById("mallaContainer");
+
+  // Función para comprobar si prerrequisitos están cumplidos
+  function isUnlocked(course) {
+    return course.prereqs.every(pr => completedCourses.includes(pr));
+  }
+
+  // Función para actualizar el contador de créditos
+  function updateCredits() {
+    let totalCredits = 0;
+    completedCourses.forEach(id => {
+      for (const year of malla) {
+        for (const semester of year.semesters) {
+          for (const c of semester.courses) {
+            if (c.id === id) totalCredits += c.credits;
+          }
+        }
+      }
+    });
+    creditsCounter.textContent = `Créditos completados: ${totalCredits}`;
+  }
+
+  // Función para guardar estado en localStorage
+  function saveProgress() {
+    localStorage.setItem("completedCourses", JSON.stringify(completedCourses));
+  }
+
+  // Renderizar la malla interactiva
+  function renderMalla() {
+    mallaContainer.innerHTML = "";
+    for (const year of malla) {
+      const yearLabel = document.createElement("div");
+      yearLabel.classList.add("year-label");
+      yearLabel.textContent = year.year;
+      mallaContainer.appendChild(yearLabel);
+
+      const semestersContainer = document.createElement("div");
+      semestersContainer.classList.add("semesters-container");
+
+      for (const semester of year.semesters) {
+        const semDiv = document.createElement("div");
+        semDiv.classList.add("semester");
+
+        const header = document.createElement("div");
+        header.classList.add("semester-header");
+        header.textContent = semester.name;
+        const emojiSpan = document.createElement("span");
+        emojiSpan.textContent = semester.emoji;
+        header.appendChild(emojiSpan);
+        semDiv.appendChild(header);
+
+        const coursesDiv = document.createElement("div");
+        coursesDiv.classList.add("courses");
+
+        for (const course of semester.courses) {
+          const courseDiv = document.createElement("div");
+          courseDiv.classList.add("course");
+
+          const unlocked = isUnlocked(course);
+          const completed = completedCourses.includes(course.id);
+
+          courseDiv.classList.toggle("locked", !unlocked && !completed);
+          courseDiv.classList.toggle("unlocked", unlocked && !completed);
+          courseDiv.classList.toggle("completed", completed);
+
+          const titleSpan = document.createElement("div");
+          titleSpan.classList.add("title");
+          titleSpan.textContent = course.name;
+
+          const creditsSpan = document.createElement("div");
+          creditsSpan.classList.add("credits");
+          creditsSpan.textContent = `${course.credits} créditos`;
+
+          courseDiv.appendChild(titleSpan);
+          courseDiv.appendChild(creditsSpan);
+
+          if (unlocked || completed) {
+            courseDiv.addEventListener("click", () => {
+              if (completed) {
+                completedCourses = completedCourses.filter(id => id !== course.id);
+              } else {
+                completedCourses.push(course.id);
+              }
+              saveProgress();
+              updateCredits();
+              renderMalla();
+            });
+          }
+          coursesDiv.appendChild(courseDiv);
+        }
+        semDiv.appendChild(coursesDiv);
+        semestersContainer.appendChild(semDiv);
+      }
+      mallaContainer.appendChild(semestersContainer);
+    }
+  }
+
+  // Iniciar app
+  updateCredits();
+  renderMalla();
+
+</script>
 </body>
 </html>
